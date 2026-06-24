@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Gestión de Archivos · GDS INFRAESTRUCTURA SAC</title>
+<style>
+  :root{
+    --navy:#143352; --navy-deep:#0E2538; --amber:#E0841A; --amber-deep:#B9690E;
+    --amber-soft:#FBEFDD; --ink:#1B2430; --muted:#5C6675; --line:#E4E8ED;
+    --paper:#FFFFFF; --bg:#E9EDF1; --green:#2F7D33; --red:#C0392B; --code:#F3F6F9;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"Cascadia Code","Consolas","SF Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg);
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+
+  .app{height:100dvh;display:flex;flex-direction:column}
+
+  /* ---------- Top bar ---------- */
+  .topbar{background:var(--navy);color:#fff;display:flex;align-items:center;
+    gap:14px;padding:11px 20px;flex:none;box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0}
+  .logo{width:34px;height:34px;border-radius:6px;background:var(--amber);
+    display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff;
+    letter-spacing:.5px;border:2px solid #fff3;flex:none}
+  .brand-txt{min-width:0}
+  .brand-txt b{display:block;font-size:13px;letter-spacing:.3px;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-txt span{display:block;font-size:10.5px;color:#b8c6d6;letter-spacing:.6px;
+    text-transform:uppercase}
+  .topbar .spacer{flex:1}
+  .idx-btn{background:#ffffff14;border:1px solid #ffffff2e;color:#fff;
+    font-family:var(--sans);font-size:12.5px;font-weight:600;cursor:pointer;
+    padding:8px 13px;border-radius:7px;display:flex;align-items:center;gap:7px;
+    transition:background .15s}
+  .idx-btn:hover{background:#ffffff26}
+  .idx-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  /* ---------- Progress ---------- */
+  .progress{height:3px;background:var(--navy-deep);flex:none}
+  .progress > i{display:block;height:100%;width:0;background:var(--amber);
+    transition:width .35s ease}
+
+  /* ---------- Stage / sheets ---------- */
+  .stage{flex:1;overflow-y:auto;display:flex;justify-content:center;
+    padding:26px 18px 22px;scroll-behavior:smooth}
+  .page{display:none;width:min(820px,100%);background:var(--paper);
+    border-radius:14px;box-shadow:0 6px 26px rgba(20,51,82,.10),0 1px 3px rgba(0,0,0,.06);
+    padding:46px 52px 52px;align-self:flex-start}
+  .page.active{display:block;animation:rise .4s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;
+    color:var(--amber-deep)}
+  .page h1{font-size:30px;font-weight:800;letter-spacing:-.4px;line-height:1.12;
+    color:var(--navy);margin:8px 0 0}
+  .rule{height:3px;width:60px;background:var(--amber);border-radius:2px;margin:18px 0 26px}
+  .page h2{font-size:17.5px;font-weight:700;color:var(--navy);margin:26px 0 10px;
+    letter-spacing:-.2px}
+  .page p{font-size:15px;line-height:1.62;color:#222b38;margin:0 0 13px}
+  .page ul{list-style:none;margin:0 0 14px}
+  .page li{position:relative;font-size:15px;line-height:1.55;padding:0 0 9px 22px}
+  .page li::before{content:"";position:absolute;left:2px;top:9px;width:6px;height:6px;
+    border-radius:50%;background:var(--amber)}
+  .page li b{color:var(--navy)}
+  .note{font-size:13px;color:var(--muted);font-style:italic;line-height:1.55;
+    border-top:1px solid var(--line);padding-top:12px;margin-top:6px}
+  code{font-family:var(--mono);font-size:.9em;background:var(--code);
+    padding:1.5px 6px;border-radius:5px;color:#243447}
+
+  /* callout */
+  .callout{background:#F7FAFD;border-left:5px solid var(--amber);border-radius:0 10px 10px 0;
+    padding:16px 20px;margin:18px 0}
+  .callout.warn{border-left-color:var(--red)}
+  .callout b{display:block;color:var(--navy);font-size:14.5px;margin-bottom:5px}
+  .callout.warn b{color:var(--red)}
+  .callout p{font-size:14px;margin:0;color:#37414e}
+
+  /* code block */
+  pre{font-family:var(--mono);font-size:13px;line-height:1.65;background:var(--code);
+    border:1px solid var(--line);border-radius:9px;padding:15px 17px;overflow-x:auto;
+    color:#2b3a4d;margin:6px 0 16px;white-space:pre}
+  .chips{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--red);
+    background:#FBEAEA;border:1px solid #efcaca;border-radius:9px;text-align:center;
+    letter-spacing:5px;padding:14px;margin:8px 0 14px}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:13.5px}
+  th,td{text-align:left;padding:9px 12px;border:1px solid var(--line);vertical-align:top}
+  thead th{background:var(--navy);color:#fff;font-weight:600;letter-spacing:.2px}
+  tbody tr:nth-child(even){background:#F5F8FB}
+  td.c{text-align:center;font-weight:700;color:var(--navy)}
+  .yes th{background:var(--green)} .no th{background:var(--red)}
+  td.ok{color:var(--green);font-family:var(--mono);font-size:12.5px}
+  td.bad{color:var(--red);font-size:13px}
+
+  /* chip row areas list */
+  .areas{font-family:var(--mono);font-size:13.5px;background:var(--code);
+    border:1px solid var(--line);border-radius:9px;padding:13px 16px;margin:4px 0 16px;
+    color:#243447;line-height:1.7}
+
+  /* checklist */
+  .check{list-style:none;margin:4px 0 0}
+  .check li{padding:0;margin:0 0 10px;display:flex;gap:12px;align-items:flex-start;
+    cursor:pointer;font-size:14.5px;line-height:1.5;user-select:none}
+  .check li::before{display:none}
+  .box{flex:none;width:21px;height:21px;border:2px solid #b9c3cf;border-radius:6px;
+    display:grid;place-items:center;margin-top:1px;transition:.15s;color:#fff;font-size:13px}
+  .check li.done .box{background:var(--amber);border-color:var(--amber)}
+  .check li.done .box::after{content:"\2713"}
+  .check li.done span{color:var(--muted);text-decoration:line-through}
+
+  /* cover */
+  .cover{text-align:left}
+  .cover .kicker{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+    color:var(--amber-deep)}
+  .cover h1{font-size:40px;line-height:1.08;margin:14px 0 0}
+  .cover .sub{font-size:16px;color:var(--muted);margin:18px 0 26px;line-height:1.5;max-width:62ch}
+  .meta{width:100%;font-size:13.5px}
+  .meta td{border:1px solid var(--line)}
+  .meta td:first-child{background:#EEF3F8;font-weight:600;color:var(--navy);width:34%}
+  .start-hint{margin-top:26px;font-size:13.5px;color:var(--muted);display:flex;
+    align-items:center;gap:8px}
+  .start-hint kbd{font-family:var(--sans);font-size:12px;background:var(--navy);color:#fff;
+    padding:3px 9px;border-radius:6px}
+
+  /* contact */
+  .contact{background:#F7FAFD;border-left:5px solid var(--navy);border-radius:0 10px 10px 0;
+    padding:20px 22px;margin-top:6px}
+  .contact b{color:var(--navy)} .contact a{color:var(--amber-deep);font-weight:600}
+
+  /* index overlay */
+  .scrim{position:fixed;inset:0;background:#0e2538cc;opacity:0;visibility:hidden;
+    transition:.2s;z-index:30}
+  .scrim.open{opacity:1;visibility:visible}
+  .toc{position:fixed;top:0;right:0;height:100%;width:340px;max-width:88%;background:#fff;
+    transform:translateX(100%);transition:transform .26s cubic-bezier(.4,0,.2,1);z-index:31;
+    display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.2)}
+  .toc.open{transform:none}
+  .toc-head{background:var(--navy);color:#fff;padding:17px 20px;display:flex;
+    justify-content:space-between;align-items:center}
+  .toc-head b{font-size:14px;letter-spacing:.4px}
+  .toc-head button{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;
+    line-height:1;padding:0 4px}
+  .toc-list{overflow-y:auto;padding:8px 0}
+  .toc-list button{display:flex;gap:13px;align-items:baseline;width:100%;text-align:left;
+    background:none;border:none;cursor:pointer;font-family:var(--sans);padding:11px 20px;
+    color:var(--ink);border-left:3px solid transparent;transition:.12s}
+  .toc-list button:hover{background:#F2F6FA}
+  .toc-list button.here{border-left-color:var(--amber);background:#FBF4EA}
+  .toc-list .n{font-family:var(--mono);font-size:12px;color:var(--amber-deep);font-weight:700;
+    min-width:22px}
+  .toc-list .t{font-size:14px;line-height:1.35}
+
+  /* nav bar */
+  .navbar{flex:none;background:#fff;border-top:1px solid var(--line);display:flex;
+    align-items:center;gap:14px;padding:11px 20px;box-shadow:0 -2px 10px rgba(20,51,82,.05)}
+  .nav-btn{font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;
+    border-radius:9px;padding:11px 20px;display:flex;align-items:center;gap:9px;
+    border:1px solid var(--line);background:#fff;color:var(--navy);transition:.15s}
+  .nav-btn:hover:not(:disabled){border-color:var(--navy);background:#F4F8FC}
+  .nav-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  .nav-btn:disabled{opacity:.34;cursor:default}
+  .nav-btn.next{margin-left:auto;background:var(--amber);border-color:var(--amber);color:#fff}
+  .nav-btn.next:hover:not(:disabled){background:var(--amber-deep);border-color:var(--amber-deep)}
+  .counter{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;
+    white-space:nowrap}
+  .counter b{color:var(--navy);font-weight:700}
+
+  @media(max-width:620px){
+    .page{padding:32px 22px 38px;border-radius:11px}
+    .page h1{font-size:24px}.cover h1{font-size:30px}
+    .stage{padding:16px 11px 16px}
+    .nav-btn{padding:11px 15px}.nav-btn .lbl{display:none}
+    .nav-btn.next .lbl{display:inline}
+    .brand-txt span{display:none}
+    th,td{padding:7px 8px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">GDS</div>
+      <div class="brand-txt">
+        <b>Gestión y Almacenamiento de Archivos</b>
+        <span>GDS Infraestructura SAC · Política v1.0</span>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <button class="idx-btn" id="tocOpen" aria-label="Abrir índice">
+      <span aria-hidden="true">☰</span> Índice
+    </button>
+  </header>
+
+  <div class="progress"><i id="bar"></i></div>
+
+  <main class="stage" id="stage">
+
+    <!-- 0 · PORTADA -->
+    <section class="page cover" data-title="Portada">
+      <div class="kicker">Política interna</div>
+      <h1>Gestión y Almacenamiento<br>de Archivos</h1>
+      <p class="sub">Buenas prácticas para nombres, carpetas y archivos en el SharePoint de la empresa. Un trabajo ordenado en la nube, sin errores al subir.</p>
+      <table class="meta"><tbody>
+        <tr><td>Empresa</td><td>GDS INFRAESTRUCTURA SAC</td></tr>
+        <tr><td>Carácter</td><td>Recomendación de buenas prácticas para todo el personal</td></tr>
+        <tr><td>Repositorio</td><td>Sitio de SharePoint de GDS, en bibliotecas por área</td></tr>
+        <tr><td>Modo de trabajo</td><td>100 % en la nube. Sin sincronización local</td></tr>
+        <tr><td>Responsable</td><td>TI · Ing. Jesús Percy Nazario Portilla · sistemas@gds.pe</td></tr>
+      </tbody></table>
+      <div class="start-hint">
+        <span>Usa <kbd>Siguiente →</kbd> abajo, las flechas del teclado o el Índice para navegar.</span>
+      </div>
+    </section>
+
+    <!-- 1 · OBJETIVO -->
+    <section class="page" data-title="Objetivo y alcance">
+      <div class="eyebrow">Capítulo 01</div>
+      <h1>Objetivo y alcance</h1><div class="rule"></div>
+      <p>Esta política reúne las buenas prácticas recomendadas para nombrar, organizar y almacenar archivos en las plataformas de GDS (SharePoint y OneDrive). Busca:</p>
+      <ul>
+        <li>Evitar los errores al subir o sincronizar provocados por rutas y nombres demasiado largos o con caracteres no válidos.</li>
+        <li>Que cualquier persona pueda localizar, abrir y compartir un archivo sin bloqueos técnicos.</li>
+        <li>Mantener una estructura ordenada y predecible, sobre todo en la documentación de obras y proyectos.</li>
+        <li>Reducir el riesgo de pérdida de información por renombrados forzados.</li>
+      </ul>
+      <p class="note">Dirigida a todo el personal y colaboradores que cree o gestione archivos en los repositorios de la empresa. Se recomienda su aplicación general para el beneficio de todos los equipos.</p>
+    </section>
+
+    <!-- 2 · POR QUÉ IMPORTA -->
+    <section class="page" data-title="Por qué importa">
+      <div class="eyebrow">Capítulo 02</div>
+      <h1>Por qué importa: las rutas largas</h1><div class="rule"></div>
+      <p>El error <em>“el nombre es demasiado largo”</em> no depende de un solo archivo, sino de la <b>ruta completa</b>: sitio + biblioteca + todas las carpetas + el nombre. Cada carpeta consume parte del límite.</p>
+      <p>Como en GDS se trabaja en la nube, el límite que manda es el de SharePoint:</p>
+      <ul>
+        <li><b>SharePoint / OneDrive:</b> la ruta completa no puede pasar de <b>400 caracteres</b> y ningún nombre de carpeta o archivo de <b>255</b>. Además, los espacios y símbolos se codifican y ocupan más de lo que parece.</li>
+        <li><b>Windows / Office (al preparar en el PC):</b> el Explorador y Word o Excel fallan sobre los <b>~260 caracteres</b> de ruta local (Excel es aún más estricto).</li>
+      </ul>
+      <div class="callout">
+        <b>Regla de oro</b>
+        <p>Rutas cortas y poco profundas + nombres breves y sin caracteres especiales = cero errores. Si un nombre es largo, se corrige renombrando o reorganizando, nunca insistiendo en la subida.</p>
+      </div>
+    </section>
+
+    <!-- 3 · LÍMITES -->
+    <section class="page" data-title="Límites técnicos">
+      <div class="eyebrow">Capítulo 03</div>
+      <h1>Límites técnicos de referencia</h1><div class="rule"></div>
+      <p>Al trabajar en la nube, los de SharePoint rigen el día a día; los de Windows solo aplican al preparar archivos en el equipo antes de subir.</p>
+      <table><thead><tr><th>Concepto</th><th>Límite</th><th>Plataforma</th></tr></thead>
+      <tbody>
+        <tr><td>Ruta completa (sitio + biblioteca + carpetas + nombre)</td><td class="c">400</td><td>SharePoint</td></tr>
+        <tr><td>Nombre de un archivo o carpeta</td><td class="c">255</td><td>SharePoint</td></tr>
+        <tr><td>Ruta para abrir/copiar en Explorador u Office</td><td class="c">≈ 260</td><td>Windows</td></tr>
+        <tr><td>Ruta para abrir un archivo en Excel</td><td class="c">≈ 218</td><td>Excel</td></tr>
+        <tr><td>Subir/mover en bloque · tamaño total</td><td class="c">100 GB</td><td>SharePoint</td></tr>
+        <tr><td>Subir/mover en bloque · nº de archivos</td><td class="c">30 000</td><td>SharePoint</td></tr>
+      </tbody></table>
+      <p class="note">El prefijo fijo del sitio de GDS (sitio + biblioteca + año) ronda los 50 caracteres, así que queda amplio margen para subcarpetas y nombres. Aun así, mantenerlos cortos evita rechazos.</p>
+    </section>
+
+    <!-- 4 · NOMBRES -->
+    <section class="page" data-title="Nombrar archivos">
+      <div class="eyebrow">Capítulo 04</div>
+      <h1>Reglas para nombrar archivos</h1><div class="rule"></div>
+      <h2>Formato general</h2>
+      <ul>
+        <li>Nombres por debajo de 50 caracteres siempre que se pueda.</li>
+        <li>Separar palabras con <code>_</code> o <code>-</code>; evitar espacios (cada espacio ocupa 3 caracteres en la nube).</li>
+        <li>No repetir en el archivo lo que ya dice la carpeta.</li>
+      </ul>
+      <h2>Fechas y versiones</h2>
+      <ul>
+        <li>Fechas siempre en formato <b>AAAA-MM-DD</b> (2026-06-23): se ordenan solas.</li>
+        <li>Versiones como <b>v01, v02, v03</b>; reservar “final” solo para lo definitivo.</li>
+      </ul>
+      <h2>Fórmula recomendada</h2>
+      <pre>AAAA-MM-DD_Obra-o-Proyecto_TipoDocumento_vNN.ext</pre>
+      <table><thead class="yes"><tr><th>✓ Recomendado</th><th class="no" style="background:var(--red)">✕ Evitar</th></tr></thead>
+      <tbody>
+        <tr><td class="ok">2026-06-23_AvCentral_Valorizacion_v02.xlsx</td><td class="bad">Valorización N° 2 obra Av. Central (corregida) FINAL.xlsx</td></tr>
+        <tr><td class="ok">AvCentral_ActaRecepcion_2026-06.pdf</td><td class="bad">Acta de recepción / conformidad (Av. Central) &amp; GDS.pdf</td></tr>
+        <tr><td class="ok">Contrato_2026-014_ContratistaABC.pdf</td><td class="bad">Contrato N° 014 / Contratista ABC S.A.C. (2026).pdf</td></tr>
+      </tbody></table>
+    </section>
+
+    <!-- 5 · CARACTERES -->
+    <section class="page" data-title="Caracteres especiales">
+      <div class="eyebrow">Capítulo 05</div>
+      <h1>Uso de caracteres especiales</h1><div class="rule"></div>
+      <h2>Prohibidos</h2>
+      <p>Nunca deben aparecer en un nombre de archivo o carpeta:</p>
+      <div class="chips">" &nbsp; * &nbsp; : &nbsp; &lt; &nbsp; &gt; &nbsp; ? &nbsp; / &nbsp; \ &nbsp; |</div>
+      <ul>
+        <li>Sin espacios al inicio o al final del nombre.</li>
+        <li>No empezar ni terminar con punto, ni usar dos puntos seguidos.</li>
+        <li>No iniciar nombres con el símbolo <code>~</code>.</li>
+      </ul>
+      <h2>Desaconsejados</h2>
+      <ul>
+        <li>Acentos y ñ (á, é, í, ó, ú, ñ, ü): preferir <code>gestion</code> antes que <code>gestión</code>.</li>
+        <li>Símbolos como <code># % &amp; { } + = @ $ ! ¿</code> y emojis.</li>
+      </ul>
+      <h2>Nombres reservados</h2>
+      <pre>CON · PRN · AUX · NUL · COM0–COM9 · LPT0–LPT9
+.lock · desktop.ini · _vti_ · "forms" · ~$...</pre>
+    </section>
+
+    <!-- 6 · CARPETAS -->
+    <section class="page" data-title="Organización de carpetas">
+      <div class="eyebrow">Capítulo 06</div>
+      <h1>Organización de carpetas</h1><div class="rule"></div>
+      <h2>Marco común de la empresa</h2>
+      <p>GDS estandariza la estructura <b>hasta el año</b>. De ahí hacia abajo, cada área organiza su trabajo respetando las reglas de esta política.</p>
+      <pre>GDS INFRAESTRUCTURA SAC   (sitio)
+   └─ ÁREA          (biblioteca)
+        └─ AAAA     (año: 2024, 2025, 2026 …)
+             └─ …   (estructura propia del área)</pre>
+      <p>Áreas actuales, cada una su propia biblioteca:</p>
+      <div class="areas">CONTABILIDAD · LOGISTICA · PROYECTOS · MANTENIMIENTO · RRHH · TESORERIA · SIG · IT · MARKETING</div>
+      <ul>
+        <li>No renombrar, duplicar ni mover las bibliotecas de área.</li>
+        <li>El año siempre en formato <b>AAAA</b> (2026), nunca “Año 2026”.</li>
+        <li>Máximo <b>2–3 niveles</b> de subcarpetas debajo del año, con nombres cortos.</li>
+        <li>Por mes: <code>01_Enero</code>, <code>02_Febrero</code>… o <code>2026-01</code>.</li>
+      </ul>
+      <h2>Ejemplo · biblioteca PROYECTOS</h2>
+      <pre>PROYECTOS
+   └─ 2026
+        └─ AvCentral_Tramo2/     (una carpeta por obra)
+             ├─ 01_Contratos/
+             ├─ 02_Expediente_Tecnico/
+             ├─ 03_Valorizaciones/
+             └─ 04_Planos/</pre>
+    </section>
+
+    <!-- 7 · ZIP -->
+    <section class="page" data-title="Archivos ZIP">
+      <div class="eyebrow">Capítulo 07</div>
+      <h1>Archivos comprimidos (ZIP)</h1><div class="rule"></div>
+      <p>Útiles para transferir o archivar, pero mal usados reintroducen las rutas largas en su interior.</p>
+      <h2>Cuándo usarlos</h2>
+      <ul>
+        <li>Enviar o entregar un conjunto de archivos como una sola pieza.</li>
+        <li>Archivar material que ya no se edita.</li>
+        <li>Reducir el número de elementos al mover grandes volúmenes.</li>
+      </ul>
+      <h2>Cuándo NO usarlos</h2>
+      <ul>
+        <li>Para documentos vivos: comprimir rompe la coedición y el historial de versiones.</li>
+        <li>Para “esconder” rutas largas: al descomprimir, el error vuelve.</li>
+      </ul>
+      <h2>Buenas prácticas</h2>
+      <ul>
+        <li>Mismas reglas de nombre que cualquier archivo (corto, sin símbolos, con fecha).</li>
+        <li>Aplanar la estructura antes de comprimir; no anidar ZIP dentro de ZIP.</li>
+        <li>Para volúmenes grandes, mejor compartir un enlace de SharePoint.</li>
+      </ul>
+    </section>
+
+    <!-- 8 · NUBE -->
+    <section class="page" data-title="Trabajo en la nube">
+      <div class="eyebrow">Capítulo 08</div>
+      <h1>Dónde y cómo guardar</h1><div class="rule"></div>
+      <p>El trabajo es directo en la nube. Lo oficial vive en las bibliotecas de SharePoint por área; OneDrive personal, solo para borradores.</p>
+      <table><thead><tr><th>Criterio</th><th>OneDrive personal</th><th>SharePoint por área</th></tr></thead>
+      <tbody>
+        <tr><td class="c" style="text-align:left">Uso</td><td>Borradores no compartidos</td><td>Documentación oficial del área</td></tr>
+        <tr><td class="c" style="text-align:left">Acceso</td><td>Solo el propietario</td><td>El equipo del área con permisos</td></tr>
+        <tr><td class="c" style="text-align:left">Colaboración</td><td>Enlace puntual</td><td>Coedición; un único archivo de referencia</td></tr>
+      </tbody></table>
+      <h2>Solo en la nube: sin sincronización local</h2>
+      <ul>
+        <li><b>Prohibido</b> usar “Sincronizar” o descargar bibliotecas completas al equipo.</li>
+        <li>Editar con Office en línea o “Abrir en aplicación” sobre un archivo puntual.</li>
+        <li>La versión válida es siempre la de SharePoint, sin copias locales permanentes.</li>
+      </ul>
+      <div class="callout">
+        <b>Beneficio</b>
+        <p>Trabajar en el navegador cuida el disco y elimina el límite de Windows (~260): el único tope pasa a ser el de SharePoint (400), mucho más holgado. Y todos editan el mismo archivo.</p>
+      </div>
+      <h2>Preparar en el PC y subir</h2>
+      <p>Crear en el equipo y subir manualmente está permitido (es distinto de sincronizar). Antes de subir:</p>
+      <ul>
+        <li><b>Nombrar bien desde el inicio</b>, no “arreglar después”.</li>
+        <li><b>Ruta local corta</b> (p. ej. <code>C:\GDS\</code>), no en Escritorio o Descargas anidados.</li>
+        <li><b>Limpiar:</b> quitar temporales (~$, .tmp) y duplicados; aplanar niveles.</li>
+        <li><b>Subir ordenado</b> con Cargar → Carpeta y <b>verificar</b> que no quedaron archivos sin subir.</li>
+      </ul>
+      <p class="note">Al subir, cuenta la ruta que el archivo tendrá ya dentro de la biblioteca (sitio + área + año + subcarpetas + nombre), no el C:\ de tu PC.</p>
+    </section>
+
+    <!-- 9 · ERRORES -->
+    <section class="page" data-title="Si aparece un error">
+      <div class="eyebrow">Capítulo 09</div>
+      <h1>Qué hacer ante un error</h1><div class="rule"></div>
+      <p>Si SharePoint impide subir o renombrar, o algunos archivos no se cargan, en orden:</p>
+      <ul>
+        <li>Acortar el nombre del archivo y de las carpetas implicadas.</li>
+        <li>Reducir niveles: aplanar la estructura debajo del año.</li>
+        <li>Eliminar caracteres especiales, acentos y espacios sobrantes.</li>
+        <li>Si falla al subir una carpeta del PC, renombrar y reorganizar <b>antes</b> de subir.</li>
+        <li>Si son muchos archivos, dividir la subida en lotes (100 GB / 30 000).</li>
+        <li>Si está abierto por otro usuario, cerrarlo antes de mover.</li>
+        <li>Si persiste, escribir a <b>sistemas@gds.pe</b> con la ruta completa afectada.</li>
+      </ul>
+      <div class="callout warn">
+        <b>Precaución</b>
+        <p>Si SharePoint renombra un archivo o avisa que no se subió, corrígelo cuanto antes. Nunca fuerces una subida sobre una advertencia: corrige primero el nombre o la ruta.</p>
+      </div>
+    </section>
+
+    <!-- 10 · CHECKLIST -->
+    <section class="page" data-title="Verificación rápida">
+      <div class="eyebrow">Capítulo 10</div>
+      <h1>Lista de verificación rápida</h1><div class="rule"></div>
+      <p>Antes de guardar o subir un archivo, toca para marcar:</p>
+      <ul class="check" id="check">
+        <li><span class="box"></span><span>Nombre corto, claro y descriptivo (idealmente &lt; 50 caracteres).</span></li>
+        <li><span class="box"></span><span>Sin caracteres prohibidos: " * : &lt; &gt; ? / \ |</span></li>
+        <li><span class="box"></span><span>Sin acentos, ñ ni espacios al inicio o al final.</span></li>
+        <li><span class="box"></span><span>Fechas en formato AAAA-MM-DD y versiones v01, v02…</span></li>
+        <li><span class="box"></span><span>Máximo 2–3 niveles debajo del año; el año en formato AAAA.</span></li>
+        <li><span class="box"></span><span>ZIP solo para envío o archivo, no para documentos vivos.</span></li>
+        <li><span class="box"></span><span>El archivo está en la biblioteca del área correcta, no solo en OneDrive personal.</span></li>
+        <li><span class="box"></span><span>Trabajo desde el navegador, sin sincronizar la biblioteca al equipo.</span></li>
+        <li><span class="box"></span><span>Si lo preparé en el PC, revisé nombre y ruta antes de subir.</span></li>
+      </ul>
+    </section>
+
+    <!-- 11 · CONTACTO -->
+    <section class="page" data-title="Documentación y consultas">
+      <div class="eyebrow">Cierre</div>
+      <h1>Documentación y consultas</h1><div class="rule"></div>
+      <p>Aplicar estas recomendaciones evita la mayoría de los errores al subir y mantiene los archivos ordenados y accesibles para todos los equipos de GDS INFRAESTRUCTURA SAC.</p>
+      <div class="contact">
+        <p style="margin-bottom:8px">Para dudas sobre esta política o dificultades al subir archivos, contactar al área de TI:</p>
+        <p><b>Responsable:</b> Ing. Jesús Percy Nazario Portilla</p>
+        <p><b>Correo:</b> <a href="mailto:sistemas@gds.pe">sistemas@gds.pe</a></p>
+      </div>
+      <p class="note">GDS INFRAESTRUCTURA SAC — Documento de uso interno — Política v1.0</p>
+    </section>
+
+  </main>
+
+  <nav class="navbar">
+    <button class="nav-btn prev" id="prev"><span aria-hidden="true">←</span> <span class="lbl">Anterior</span></button>
+    <span class="counter"><b id="cur">1</b> / <span id="total">12</span></span>
+    <button class="nav-btn next" id="next"><span class="lbl">Siguiente</span> <span aria-hidden="true">→</span></button>
+  </nav>
+</div>
+
+<!-- TOC -->
+<div class="scrim" id="scrim"></div>
+<aside class="toc" id="toc" aria-label="Índice">
+  <div class="toc-head"><b>Índice</b><button id="tocClose" aria-label="Cerrar">×</button></div>
+  <div class="toc-list" id="tocList"></div>
+</aside>
+
+<script>
+(function(){
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var total = pages.length, i = 0;
+  var bar=document.getElementById('bar'), cur=document.getElementById('cur'),
+      prev=document.getElementById('prev'), next=document.getElementById('next'),
+      stage=document.getElementById('stage'), tocList=document.getElementById('tocList'),
+      toc=document.getElementById('toc'), scrim=document.getElementById('scrim');
+  document.getElementById('total').textContent = total;
+
+  // build TOC
+  pages.forEach(function(p,idx){
+    var b=document.createElement('button');
+    var label = p.getAttribute('data-title');
+    var n = idx===0 ? '·' : (idx===total-1 ? '·' : String(idx).padStart(2,'0'));
+    b.innerHTML='<span class="n">'+n+'</span><span class="t">'+label+'</span>';
+    b.addEventListener('click',function(){ go(idx); closeToc(); });
+    tocList.appendChild(b);
+  });
+  var tocBtns = tocList.querySelectorAll('button');
+
+  function go(n){
+    i=Math.max(0,Math.min(total-1,n));
+    pages.forEach(function(p,idx){ p.classList.remove('active'); if(idx===i) p.classList.add('active'); });
+    bar.style.width = ((i)/(total-1)*100)+'%';
+    cur.textContent = i+1;
+    prev.disabled = i===0; next.disabled = i===total-1;
+    tocBtns.forEach(function(b,idx){ b.classList.toggle('here', idx===i); });
+    stage.scrollTop=0;
+  }
+  prev.addEventListener('click',function(){ go(i-1); });
+  next.addEventListener('click',function(){ go(i+1); });
+
+  // keyboard
+  document.addEventListener('keydown',function(e){
+    if(toc.classList.contains('open')){ if(e.key==='Escape') closeToc(); return; }
+    if(e.key==='ArrowRight'||e.key==='PageDown'){ go(i+1); }
+    if(e.key==='ArrowLeft'||e.key==='PageUp'){ go(i-1); }
+  });
+
+  // swipe (mobile)
+  var x0=null;
+  stage.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; },{passive:true});
+  stage.addEventListener('touchend',function(e){
+    if(x0===null) return;
+    var dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>60){ dx<0 ? go(i+1) : go(i-1); }
+    x0=null;
+  },{passive:true});
+
+  // TOC open/close
+  function openToc(){ toc.classList.add('open'); scrim.classList.add('open'); }
+  function closeToc(){ toc.classList.remove('open'); scrim.classList.remove('open'); }
+  document.getElementById('tocOpen').addEventListener('click',openToc);
+  document.getElementById('tocClose').addEventListener('click',closeToc);
+  scrim.addEventListener('click',closeToc);
+
+  // checklist toggle
+  var check=document.getElementById('check');
+  if(check){ check.addEventListener('click',function(e){
+    var li=e.target.closest('li'); if(li) li.classList.toggle('done');
+  }); }
+
+  go(0);
+})();
+</script>
+</body>
+</html>
